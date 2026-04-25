@@ -31,12 +31,12 @@ result = milp(
     c=-revenue,
     constraints=constraints,
     bounds=Bounds(0, 1),
-    integrality=np.ones(len(revenue), dtype=int),
+    integrality=1,
 )
 if not result.success:
     raise RuntimeError(f"MILP solver failed: {result.message}")
 
-selected = np.rint(result.x).astype(bool)
+selected = result.x > 0.5
 total_spend = float(spend[selected].sum())
 total_revenue = float(revenue[selected].sum())
 total_cs_contacts = int(cs_contacts[selected].sum())
