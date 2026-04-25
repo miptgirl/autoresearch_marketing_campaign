@@ -13,18 +13,11 @@ users, cs_contacts, spend, revenue = np.loadtxt(
     usecols=(2, 3, 4, 5),
     unpack=True,
 )
+rate_excess = CONTACT_RATE_DENOMINATOR * cs_contacts - CONTACT_RATE_NUMERATOR * users
 
 result = milp(
     c=-revenue,
-    constraints=(
-        [
-            spend,
-            cs_contacts,
-            CONTACT_RATE_DENOMINATOR * cs_contacts - CONTACT_RATE_NUMERATOR * users,
-        ],
-        -np.inf,
-        [BUDGET, MAX_CS_CONTACTS, 0],
-    ),
+    constraints=((spend, cs_contacts, rate_excess), -np.inf, (BUDGET, MAX_CS_CONTACTS, 0)),
     bounds=(0, 1),
     integrality=1,
 )
@@ -32,6 +25,7 @@ if not result.success:
     raise RuntimeError(f"MILP solver failed: {result.message}")
 
 selected = result.x > 0.5
+selected_count = int(selected.sum())
 total_spend = float(spend[selected].sum())
 total_revenue = float(revenue[selected].sum())
 total_cs_contacts = int(cs_contacts[selected].sum())
@@ -51,12 +45,12 @@ assert (
 print(f"METRIC revenue_millions={revenue_millions:.4f}")
 print(f"METRIC spend_millions={total_spend/1_000_000:.4f}")
 print(f"METRIC budget_slack_millions={budget_slack_millions:.4f}")
-print(f"METRIC segment_count={int(selected.sum())}")
+print(f"METRIC segment_count={selected_count}")
 print(f"METRIC cs_contacts={total_cs_contacts}")
 print(f"METRIC cs_headroom={MAX_CS_CONTACTS - total_cs_contacts}")
 print(f"METRIC contact_rate={contact_rate:.6f}")
 print(f"METRIC rate_headroom={rate_headroom:.6f}")
 print(
-    f"# solver=scipy_milp segments={int(selected.sum())} spend={total_spend/1e6:.2f}M "
+    f"# solver=scipy_milp segments={selected_count} spend={total_spend/1e6:.2f}M "
     f"cs={total_cs_contacts} rate={contact_rate:.4%}"
 )
