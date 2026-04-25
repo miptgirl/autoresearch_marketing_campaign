@@ -1,5 +1,3 @@
-import csv
-
 import numpy as np
 from scipy.optimize import Bounds, LinearConstraint, milp
 
@@ -9,13 +7,13 @@ CONTACT_RATE_NUMERATOR = 21
 CONTACT_RATE_DENOMINATOR = 500
 MAX_CONTACT_RATE = CONTACT_RATE_NUMERATOR / CONTACT_RATE_DENOMINATOR
 
-with open('marketing_campaign_estimations.csv', newline='') as handle:
-    rows = list(csv.DictReader(handle, delimiter='\t'))
-
-spend = np.array([float(row['marketing_spending']) for row in rows])
-revenue = np.array([float(row['revenue']) for row in rows])
-cs_contacts = np.array([int(row['cs_contacts']) for row in rows], dtype=float)
-users = np.array([int(row['users']) for row in rows], dtype=float)
+users, cs_contacts, spend, revenue = np.loadtxt(
+    'marketing_campaign_estimations.csv',
+    delimiter='\t',
+    skiprows=1,
+    usecols=(2, 3, 4, 5),
+    unpack=True,
+)
 
 constraints = LinearConstraint(
     np.vstack(
@@ -33,7 +31,7 @@ result = milp(
     c=-revenue,
     constraints=constraints,
     bounds=Bounds(0, 1),
-    integrality=np.ones(len(rows), dtype=int),
+    integrality=np.ones(len(revenue), dtype=int),
 )
 if not result.success:
     raise RuntimeError(f"MILP solver failed: {result.message}")
