@@ -53,5 +53,6 @@ The workload is tiny (62 rows), so exact combinatorial optimization is practical
 - Replaced the tiny pandas-based data-loading/summing path with `csv.DictReader` plus NumPy arrays. Revenue stayed optimal, the code got slightly leaner, and end-to-end script runtime fell again to about 0.5s.
 - Simplified once more by loading only the four numeric columns via `np.loadtxt(usecols=...)`. That preserved the exact optimum and trimmed end-to-end runtime to about 0.4s.
 - Minor cleanup: `milp(..., integrality=1)` broadcasts the binary integrality requirement, and `result.x > 0.5` is a clear way to recover the chosen mask. Same optimum, slightly less code.
+- SciPy's `milp` interface also accepts raw `(A, b_l, b_u)` constraints and tuple bounds, so `Bounds`/`LinearConstraint` imports can be removed entirely without changing the exact solution.
 - Offline tie-break checks suggest this constrained optimum is also unique in practice on the current dataset: minimizing CS contacts or spend subject to the best revenue returned the same 42-segment plan.
 - If portability ever becomes a requirement, reintroduce a fallback separately. The old warning about unsafe pairwise dominance pruning still applies: in 0/1 selection, a dominated row can still be useful alongside its dominator.

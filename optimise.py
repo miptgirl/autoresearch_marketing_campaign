@@ -1,11 +1,10 @@
 import numpy as np
-from scipy.optimize import Bounds, LinearConstraint, milp
+from scipy.optimize import milp
 
 BUDGET = 30_000_000.0
 MAX_CS_CONTACTS = 5_000
 CONTACT_RATE_NUMERATOR = 21
 CONTACT_RATE_DENOMINATOR = 500
-MAX_CONTACT_RATE = CONTACT_RATE_NUMERATOR / CONTACT_RATE_DENOMINATOR
 
 users, cs_contacts, spend, revenue = np.loadtxt(
     'marketing_campaign_estimations.csv',
@@ -15,22 +14,18 @@ users, cs_contacts, spend, revenue = np.loadtxt(
     unpack=True,
 )
 
-constraints = LinearConstraint(
-    np.vstack(
+result = milp(
+    c=-revenue,
+    constraints=(
         [
             spend,
             cs_contacts,
             CONTACT_RATE_DENOMINATOR * cs_contacts - CONTACT_RATE_NUMERATOR * users,
-        ]
+        ],
+        -np.inf,
+        [BUDGET, MAX_CS_CONTACTS, 0],
     ),
-    -np.inf,
-    [BUDGET, MAX_CS_CONTACTS, 0],
-)
-
-result = milp(
-    c=-revenue,
-    constraints=constraints,
-    bounds=Bounds(0, 1),
+    bounds=(0, 1),
     integrality=1,
 )
 if not result.success:
@@ -44,7 +39,7 @@ total_users = int(users[selected].sum())
 revenue_millions = total_revenue / 1_000_000
 budget_slack_millions = (BUDGET - total_spend) / 1_000_000
 contact_rate = total_cs_contacts / total_users
-rate_headroom = MAX_CONTACT_RATE - contact_rate
+rate_headroom = CONTACT_RATE_NUMERATOR / CONTACT_RATE_DENOMINATOR - contact_rate
 
 assert total_spend <= BUDGET + 1e-6, f"Budget violated: {total_spend}"
 assert total_cs_contacts <= MAX_CS_CONTACTS, f"CS contacts violated: {total_cs_contacts}"
