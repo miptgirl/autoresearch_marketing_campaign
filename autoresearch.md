@@ -50,4 +50,6 @@ The workload is tiny (62 rows), so exact combinatorial optimization is practical
 - The new rate constraint can be rewritten exactly as `500 * cs_contacts - 21 * users <= 0`, which makes the problem a small binary linear program with three linear constraints (budget, CS contacts, rate).
 - `scipy.optimize.milp` solves this exact formulation essentially instantly on the current dataset, making it a strong candidate over maintaining a custom multi-constraint branch-and-bound.
 - Simplified the implementation further by removing the fallback search path and solving directly with SciPy MILP; revenue stayed at the exact optimum while the code became much shorter and the script runtime dropped from about 1.1s to about 0.7s.
+- Replaced the tiny pandas-based data-loading/summing path with `csv.DictReader` plus NumPy arrays. Revenue stayed optimal, the code got slightly leaner, and end-to-end script runtime fell again to about 0.5s.
+- Offline tie-break checks suggest this constrained optimum is also unique in practice on the current dataset: minimizing CS contacts or spend subject to the best revenue returned the same 42-segment plan.
 - If portability ever becomes a requirement, reintroduce a fallback separately. The old warning about unsafe pairwise dominance pruning still applies: in 0/1 selection, a dominated row can still be useful alongside its dominator.
