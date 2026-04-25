@@ -36,3 +36,6 @@ The workload is tiny (62 rows), so higher-quality combinatorial optimization str
 - Baseline code sorts by `revenue / marketing_spending`, computes cumulative spend, and keeps only the sorted prefix under budget.
 - This baseline is structurally weak: if one high-ranked row would overflow the budget, the algorithm stops considering all later rows even if several of them would fit and increase revenue.
 - Repository inspection: 62 total segments across 31 countries and 2 channels, so exact search may be feasible with careful pruning.
+- Replaced the prefix heuristic with an exact branch-and-bound 0/1 knapsack search using a fractional-knapsack upper bound and a greedy feasible seed. Revenue improved from **107.9158M** to **110.1627M**.
+- The current best solution appears to be the unique optimum on this dataset; an offline exploratory script found the same value and only one best combination.
+- Many rows are strictly dominated in a pairwise sense, but naive dominance pruning is **not** safe here: in a 0/1 knapsack, the dominating row may already be selected, and the dominated row can still be a useful additional item. A pruning attempt dropped revenue all the way to **95.9106M**, so avoid that shortcut.
