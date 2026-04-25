@@ -1,0 +1,2 @@
+- If the objective later changes from "maximize revenue on this fixed dataset" to "solve many larger campaign tables quickly", benchmark exact-solver runtime directly and compare the current branch-and-bound approach against Pareto-frontier dynamic programming.
+- If additional business constraints are introduced later (per-country limits, channel caps, mandatory inclusions/exclusions), revisit the solver formulation; the current branch-and-bound is exact for the unconstrained 0/1 budgeted case but some pruning assumptions break once richer constraints appear.
